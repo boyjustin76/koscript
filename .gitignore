@@ -12,6 +12,8 @@ dist/
 *.srt
 *.prproj
 *.psd
+# 말뭉치 파생물 — 규약 3. 재배포 금지
+koscript/clause/data/*.json.gz
 *.gz
 자료/
 !examples/**/*.docx

@@ -6,9 +6,9 @@ producer sent you without breaking it.
 
 한국어 영상 대본을 쓰는 연장통입니다. 아래 [한국어](#한국어) 참고.
 
-> **Before you start:** `koscript` needs [Kiwi](https://github.com/bab2min/Kiwi) (one `pip` line)
-> and the [NIKL corpus](https://corpus.korean.go.kr) (free, but you apply for it and a human
-> approves — start that first). **→ [docs/SETUP.md](docs/SETUP.md)**
+> **Before you start:** `koscript.clause` needs the [NIKL corpus](https://corpus.korean.go.kr)
+> — free, but you apply for it and a human approves, so **start that first**.
+> [Kiwi](https://github.com/bab2min/Kiwi) is optional. **→ [docs/SETUP.md](docs/SETUP.md)**
 
 ---
 
@@ -37,17 +37,17 @@ reference.
 
 | | |
 |---|---|
-| **`koscript.clause`** | Break Korean text at clause and phrase boundaries. Graded — punctuation first, sentence endings next, particles only as a last resort. Never breaks before an auxiliary verb, a bound noun, or after `-의`. |
-| **`koscript.docx`** | Edit a `.docx` form without breaking it. Read a reviewer's **strikethrough and underline marks**. Diff two revisions paragraph by paragraph. Build OOXML that Word will actually open. |
+| [**`clause`**](koscript/clause) | Break Korean text at clause and phrase boundaries. Graded — punctuation first, sentence endings next, particles only as a last resort. Never breaks before an auxiliary verb, a bound noun, or after `-의`. |
+| [**`docx`**](koscript/docx) | Edit a `.docx` form without breaking it. Read a reviewer's **strikethrough and underline marks**. Diff two revisions paragraph by paragraph. Build OOXML that Word will actually open. |
 
-More to come — prompter PDF reading, copy-overlap checking, Premiere XML.
+More to come -- prompter PDF reading, copy-overlap checking, Premiere FCP7 XML.
 
 ## Install
 
 ```bash
-pip install kiwipiepy          # required
 git clone https://github.com/<you>/koscript && cd koscript && pip install -e .
-# then get the corpus — docs/SETUP.md
+# then get the corpus — docs/SETUP.md . `clause` needs it; `docx` does not.
+pip install kiwipiepy           # optional, see "Does Kiwi help?" below
 ```
 
 ## Quick look
@@ -55,9 +55,9 @@ git clone https://github.com/<you>/koscript && cd koscript && pip install -e .
 ```python
 from koscript.clause import split
 
-split("선이 방향을 확정해 줄 때까지 기다렸다가 그 방향으로만 들어가는 매매법입니다.")
-# ['선이 방향을 확정해 줄 때까지 기다렸다가',
-#  '그 방향으로만 들어가는 매매법입니다.']
+split("이 선이 방향을 확정해 줄 때까지 기다렸다가 그다음에 움직이는 방식입니다.")
+# ['이 선이 방향을 확정해 줄 때까지 기다렸다가',
+#  '그다음에 움직이는 방식입니다.']
 ```
 
 ```python
@@ -77,15 +77,39 @@ pack.write_body(doc, body); pack.repack(doc, "edited.docx")
 ## How good is it
 
 `clause` is tuned against a reference edited by hand — 99 lines of a real shooting script, where
-a person moved every break to where they wanted it.
+a person moved every break to where they wanted it. Score your own with:
 
-| | character-count | koscript |
-|---|---|---|
-| **precision** (breaks a human accepts) | 0.76 | **0.93** |
-| lines produced | 174 | 112 |
+```bash
+python tools/score.py your_reference.txt
+```
 
-Precision is the number that matters. Recall rewards breaking more often, which is the wrong
-instinct — the fewer, better-placed breaks win.
+On that reference, re-splitting the same sentences:
+
+| | |
+|---|---|
+| **precision** — breaks of mine the human also made | **0.909** |
+| recall — human breaks I found | 0.606 |
+| lines produced | 66 (the human made 99) |
+
+**Precision is the number that matters.** Recall rewards breaking more often, which is the wrong
+instinct: fewer, better-placed breaks win. The six remaining misses are all places where the
+human broke after a comma inside a list and `clause` kept the list together.
+
+One reference is thin evidence. If you score it on your own material, please open an issue with
+the number — that is the most useful contribution this project can get right now.
+
+### Does Kiwi help?
+
+Honest answer: **not yet, on the only reference we have.**
+
+| | precision |
+|---|---|
+| corpus table + suffix rules (default) | **0.909** |
+| corpus table + Kiwi + suffix rules | 0.894 |
+
+Kiwi adds one break the human did not make. So it is **off by default** —
+`Tagger(use_kiwi=True)` turns it on. It should earn its place on text full of words the corpus
+never saw (loanwords, product names); that is untested. Measurements welcome.
 
 ## Status
 
@@ -105,9 +129,9 @@ anything derived from it.
 **한국어 영상 대본을 쓰는 연장통.** 자막 줄을 글자 수가 아니라 **문법으로** 끊고, 쓴 글을
 출처에 맞대 보고, 받은 워드 양식을 안 깨뜨리고 채웁니다.
 
-> **먼저 받을 것:** [Kiwi](https://github.com/bab2min/Kiwi) (`pip` 한 줄) 와
-> [모두의 말뭉치](https://corpus.korean.go.kr) (무료지만 **신청해서 승인**을 받아야 합니다 —
-> 이것부터 넣어 두세요). **→ [docs/SETUP.md](docs/SETUP.md)**
+> **먼저 받을 것:** [모두의 말뭉치](https://corpus.korean.go.kr) — 무료지만 **신청해서 승인**을
+> 받아야 하니 **이것부터 넣어 두세요**. [Kiwi](https://github.com/bab2min/Kiwi) 는 선택입니다.
+> **→ [docs/SETUP.md](docs/SETUP.md)**
 
 ## 왜 만들었나
 
@@ -126,5 +150,11 @@ libass 이슈 #694 를 보면 한국어는 ICU·Budou 모두 **"띄어쓰기에�
 
 ## 얼마나 되나
 
-사람이 손수 고친 기준판(실제 촬영 대본 99줄) 대비 **정밀 0.76 → 0.93**, 줄 수 174 → 112.
-재현이 아니라 정밀을 봅니다 — 많이 끊을수록 재현은 오르는데, 그건 틀린 방향입니다.
+사람이 손수 고친 기준판(실제 촬영 대본 99줄) 대비 **정밀 0.909** — 내가 끊은 자리 가운데
+사람도 끊은 비율입니다. 재현 0.606, 줄 수 66(사람은 99).
+**재현이 아니라 정밀을 봅니다** — 많이 끊을수록 재현은 오르는데 그건 틀린 방향입니다.
+`python tools/score.py <기준판.txt>` 로 직접 재 보실 수 있습니다.
+
+**Kiwi 는 이 기준판에서 도움이 안 됐습니다** — 0.909 → 0.894 로 오히려 한 자리를 더 끊습니다.
+그래서 기본은 꺼 두었습니다(`Tagger(use_kiwi=True)` 로 켭니다). 말뭉치에 없는 말이 많은 글에서는
+값을 할 것 같은데 아직 못 재 봤습니다. 기준판 하나로는 증거가 얇습니다.
