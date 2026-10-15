@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+
+# 바깥 자료 — 규약 3. 올리지 않는다
+*.docx
+*.pdf
+*.srt
+*.prproj
+*.psd
+*.gz
+자료/
+!examples/**/*.docx
