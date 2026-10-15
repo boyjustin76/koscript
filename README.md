@@ -1,39 +1,130 @@
-# scriptkit
+# koscript
 
-**한국어 영상 대본·자막과 그 둘레의 문서·편집 파일을 다루는 연장통.**
+**A toolkit for writing Korean video scripts.** Break lines where the grammar allows, not where
+the character count lands. Check what you wrote against your sources. Fill the DOCX form your
+producer sent you without breaking it.
 
-유튜브 롱폼 대본을 쓰고, 자막으로 가르고, 워드 양식에 얹고, 편집 프로그램으로 넘기는
-일을 하면서 **같은 코드를 네 번씩 다시 짰다.** 그래서 다시 쓸 수 있는 것만 뽑아 모았다.
+한국어 영상 대본을 쓰는 연장통입니다. 아래 [한국어](#한국어) 참고.
 
-여기 있는 것은 전부 `f( )` 다 — 경로도 양식 값도 **부르는 쪽이 넣는다.**
-자세한 규칙은 [`CONVENTIONS.md`](CONVENTIONS.md).
+> **Before you start:** `koscript` needs [Kiwi](https://github.com/bab2min/Kiwi) (one `pip` line)
+> and the [NIKL corpus](https://corpus.korean.go.kr) (free, but you apply for it and a human
+> approves — start that first). **→ [docs/SETUP.md](docs/SETUP.md)**
 
-## 묶음
+---
 
-| | 무엇을 | 상태 |
-|---|---|---|
-| [`scriptkit/docx`](scriptkit/docx) | 워드 문서 수술 — 풀기·표시 읽기·전수 대조·세면서 고치기·OOXML 로 짓기·눈으로 보기 | **됨** |
-| `scriptkit/korean` | 한국어 구·절 가름, 자막 큐 규칙, 베낌 검사 | 짓는 중 |
-| `scriptkit/pdfform` | 남의 PDF 양식 뜨기 — 쪽 렌더·형광색 실측·프롬프터 글 읽기 | 짓는 중 |
-| `scriptkit/premiere` | 프리미어로 넘기기 — FCP7 XML 짓기, `.prproj` 읽기, 물린 경로 찾기 | 짓는 중 |
+## The problem
 
-## 쓰기
+Every subtitle tool breaks Korean lines by counting characters. Korean does not survive that.
 
-```bash
-git clone <이 저장소>
-cd scriptkit
-python -m pytest            # 바깥 자료 없이도 돌아간다
+```
+어떻게 끊어야 하나  →  글자 수로 (what tools do)   문법으로 (koscript)
+────────────────────────────────────────────────────────────────────
+선이 방향을 확정해      선이 방향을 확정해 줄      선이 방향을 확정해 줄
+줄 때까지 기다렸다가    때까지 기다렸다가 그       때까지 기다렸다가
+그 방향으로만           방향으로만 들어가는        그 방향으로만 들어가는
+들어가는 매매법         매매법                     매매법
+                        ↑ `확정해 줄` 이 쪼개짐    ↑ 구 단위로 끊김
 ```
 
-파이썬 3.9+. 묶음마다 필요한 것이 다르니 그 묶음의 `README.md` 를 본다.
-`docx.render` 만 LibreOffice 와 poppler 가 있어야 한다.
+This is not a solved problem. [libass #694](https://github.com/libass/libass/issues/694) notes
+that for Korean, ICU and Budou both fall back to *"break on spaces."* Subtitle editors carry open
+issues about it. At least one tool asks an LLM to do it.
 
-## 안 들어 있는 것
+`koscript` does it deterministically, from morphology tags, measured against a human-edited
+reference.
 
-**회사 양식·납품물·대본 내용·남의 자막·말뭉치 파생물은 올리지 않는다.**
-바깥 자료가 필요한 묶음은 그 `README.md` 에 **무엇을 어디서 어떻게 받아 어디에 두는지**
-적어 두었다.
+## What is in here
 
-## 라이선스
+| | |
+|---|---|
+| **`koscript.clause`** | Break Korean text at clause and phrase boundaries. Graded — punctuation first, sentence endings next, particles only as a last resort. Never breaks before an auxiliary verb, a bound noun, or after `-의`. |
+| **`koscript.docx`** | Edit a `.docx` form without breaking it. Read a reviewer's **strikethrough and underline marks**. Diff two revisions paragraph by paragraph. Build OOXML that Word will actually open. |
 
-아직 안 정했다. 정하기 전에는 사내용으로만 쓴다.
+More to come — prompter PDF reading, copy-overlap checking, Premiere XML.
+
+## Install
+
+```bash
+pip install kiwipiepy          # required
+git clone https://github.com/<you>/koscript && cd koscript && pip install -e .
+# then get the corpus — docs/SETUP.md
+```
+
+## Quick look
+
+```python
+from koscript.clause import split
+
+split("선이 방향을 확정해 줄 때까지 기다렸다가 그 방향으로만 들어가는 매매법입니다.")
+# ['선이 방향을 확정해 줄 때까지 기다렸다가',
+#  '그 방향으로만 들어가는 매매법입니다.']
+```
+
+```python
+from koscript.docx import pack, read, edit
+
+doc  = pack.unpack("form.docx", "work")
+body = pack.read_body(doc)
+
+for i, marked in read.read_marks(body):           # what the reviewer changed
+    print(i, marked)
+# 12 그래서 다음에는 [-무너지는 날도 있죠.-][_무너지죠._]
+
+body = edit.replace_once(body, "무너지는 날도 있죠.", "무너지죠.")   # raises if not exactly 1
+pack.write_body(doc, body); pack.repack(doc, "edited.docx")
+```
+
+## How good is it
+
+`clause` is tuned against a reference edited by hand — 99 lines of a real shooting script, where
+a person moved every break to where they wanted it.
+
+| | character-count | koscript |
+|---|---|---|
+| **precision** (breaks a human accepts) | 0.76 | **0.93** |
+| lines produced | 174 | 112 |
+
+Precision is the number that matters. Recall rewards breaking more often, which is the wrong
+instinct — the fewer, better-placed breaks win.
+
+## Status
+
+Early. `clause` and `docx` work and are tested; the rest is being extracted from a working
+production pipeline. Interfaces may move before `1.0`.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Kiwi (LGPL-3.0) and the NIKL corpus are **separate** dependencies
+you install yourself; neither is bundled here, and the corpus terms forbid redistributing it or
+anything derived from it.
+
+---
+
+# 한국어
+
+**한국어 영상 대본을 쓰는 연장통.** 자막 줄을 글자 수가 아니라 **문법으로** 끊고, 쓴 글을
+출처에 맞대 보고, 받은 워드 양식을 안 깨뜨리고 채웁니다.
+
+> **먼저 받을 것:** [Kiwi](https://github.com/bab2min/Kiwi) (`pip` 한 줄) 와
+> [모두의 말뭉치](https://corpus.korean.go.kr) (무료지만 **신청해서 승인**을 받아야 합니다 —
+> 이것부터 넣어 두세요). **→ [docs/SETUP.md](docs/SETUP.md)**
+
+## 왜 만들었나
+
+자막 도구는 전부 글자 수로 줄을 끊습니다. 한국어는 그러면 `확정해 / 줄` 처럼 말 중간이 갈립니다.
+libass 이슈 #694 를 보면 한국어는 ICU·Budou 모두 **"띄어쓰기에서만 자른다"** 가 권고안이고,
+자막 편집기들에는 이 불만 이슈가 열려 있습니다. 어떤 도구는 LLM 에 물어서 해결합니다.
+
+`koscript` 는 형태소 태그로 **규칙에 따라** 끊고, 사람이 손수 고친 기준판에 맞대어 값을 잽니다.
+
+## 들어 있는 것
+
+- **`koscript.clause`** — 구·절 단위로 끊기. 등급제 — 구두점 먼저, 종결·연결어미 다음,
+  조사는 마지막 수단. 보조용언·의존명사 앞, `-의` 뒤에서는 끊지 않습니다
+- **`koscript.docx`** — 워드 양식 안 깨고 고치기, **취소선·밑줄 검토 표시 읽기**,
+  두 판 문단 전수 대조, 워드가 여는 OOXML 짓기
+
+## 얼마나 되나
+
+사람이 손수 고친 기준판(실제 촬영 대본 99줄) 대비 **정밀 0.76 → 0.93**, 줄 수 174 → 112.
+재현이 아니라 정밀을 봅니다 — 많이 끊을수록 재현은 오르는데, 그건 틀린 방향입니다.

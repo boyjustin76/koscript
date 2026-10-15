@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "scriptkit"
+name = "koscript"
 version = "0.1.0"
 description = "한국어 영상 대본·자막과 그 둘레의 문서·편집 파일을 다루는 연장통"
 requires-python = ">=3.9"
@@ -13,7 +13,7 @@ dependencies = []          # docx 묶음은 표준 라이브러리만 쓴다
 dev = ["pytest>=7"]
 
 [tool.setuptools.packages.find]
-include = ["scriptkit*"]
+include = ["koscript*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
