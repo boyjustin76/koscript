@@ -95,6 +95,9 @@ On that reference, re-splitting the same sentences:
 instinct: fewer, better-placed breaks win. The six remaining misses are all places where the
 human broke after a comma inside a list and `clause` kept the list together.
 
+The exact number moves a little with which corpus subset you build the table from --
+88k word forms gave 0.909 here, 103k gave 0.910.
+
 One reference is thin evidence. If you score it on your own material, please open an issue with
 the number — that is the most useful contribution this project can get right now.
 
