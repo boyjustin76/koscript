@@ -39,8 +39,9 @@ reference.
 |---|---|
 | [**`clause`**](koscript/clause) | Break Korean text at clause and phrase boundaries. Graded — punctuation first, sentence endings next, particles only as a last resort. Never breaks before an auxiliary verb, a bound noun, or after `-의`. |
 | [**`docx`**](koscript/docx) | Edit a `.docx` form without breaking it. Read a reviewer's **strikethrough and underline marks**. Diff two revisions paragraph by paragraph. Build OOXML that Word will actually open. |
+| [**`premiere`**](koscript/premiere) | Build an FCP7 XML sequence Premiere will actually import -- including the `pathurl` encoding that silently breaks it. Read a `.prproj` without opening Premiere. |
 
-More to come -- prompter PDF reading, copy-overlap checking, Premiere FCP7 XML.
+More to come -- prompter PDF reading, copy-overlap checking.
 
 ## Install
 
