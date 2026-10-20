@@ -25,6 +25,7 @@ import glob
 import gzip
 import html
 import os
+import re
 
 ABS_TAGS = ('ActualMediaFilePath', 'FilePath')
 REL_TAG = 'RelativePath'
@@ -60,6 +61,18 @@ def is_absolute(s):
     return len(s) > 3 and s[1] == ':' and s[0].isalpha() and s[2] in ('\\', '/')
 
 
+def file_name(path):
+    """Last component of a path, whichever separator **the writing machine** used.
+
+    The paths inside a ``.prproj`` belong to the machine that saved it, and that
+    is almost always Windows. ``os.path.basename`` on Linux or macOS does not
+    split a backslash, so ``Z:\\gone\\b.mp4`` came back whole, the name never
+    matched its relative-path candidate, and a clip Premiere would open fine was
+    reported offline. Read the file's separators, not the host's.
+    """
+    return re.split(r'[\\/]', path)[-1]
+
+
 def links(project, xml=None):
     """``(absolute paths, file names reachable by relative path)``."""
     xml = read_xml(project) if xml is None else xml
@@ -76,7 +89,7 @@ def links(project, xml=None):
             continue
         p = os.path.normpath(os.path.join(base, v.replace('\\', os.sep)))
         if os.path.exists(p):
-            relative.add(os.path.basename(p).lower())
+            relative.add(file_name(p).lower())
     return absolute, relative
 
 
@@ -88,7 +101,7 @@ def offline(project, xml=None):
     """
     absolute, relative = links(project, xml)
     gone = sorted(p for p in absolute
-                  if not os.path.exists(p) and os.path.basename(p).lower() not in relative)
+                  if not os.path.exists(p) and file_name(p).lower() not in relative)
     return gone, len(absolute)
 
 
