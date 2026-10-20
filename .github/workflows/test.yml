@@ -30,5 +30,20 @@ jobs:
         continue-on-error: true
         run: choco install poppler --no-progress
       - run: pip install -e ".[dev]"
+      - name: which poppler, if any
+        shell: bash
+        run: pdftotext -v || echo 'no poppler on this runner'
       # Tests that need the corpus skip themselves -- it cannot be downloaded in CI.
-      - run: python -m pytest -q -rs
+      - name: pytest
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest -q -rs --tb=short 2>&1 | tee pytest.log
+      # So a failure is readable on the run page without downloading the logs.
+      - name: report
+        if: always()
+        shell: bash
+        run: |
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -60 pytest.log >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
