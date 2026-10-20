@@ -36,6 +36,8 @@ import os
 import re
 from urllib.parse import quote
 
+from .project import file_name
+
 #: Characters Premiere leaves literal in a ``pathurl`` -- measured from its own export.
 SAFE = "/()[]&~!$'*+,;=@_-."
 
@@ -143,7 +145,9 @@ def build(spec, source_root=None, thin=False):
             '</samplecharacteristics></video>'
             '<audio><samplecharacteristics><depth>16</depth><samplerate>48000</samplerate>'
             '</samplecharacteristics><channelcount>2</channelcount></audio></media></file>'
-            % (fid[k], html.escape(os.path.basename(p)), html.escape(pathurl(p)), FR,
+            # Not `os.path.basename`: a Windows path handed in on a Mac would come
+            # back whole and the clip would be named after its full path.
+            % (fid[k], html.escape(file_name(p)), html.escape(pathurl(p)), FR,
                src_frames[k], R, DF, R, width, height))
 
     tracks, cursor, end_max = {}, 0, 0

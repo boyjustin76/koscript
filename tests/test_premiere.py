@@ -189,6 +189,18 @@ def test_relative_paths_are_unescaped_twice(tmp_path):
     assert 'a & b.mp4' in relative
 
 
+def test_a_windows_path_splits_on_a_machine_that_is_not_windows():
+    """`os.path.basename` keeps a backslash path whole on posix.
+
+    The paths in a `.prproj` come from the machine that saved it. Reading one on
+    a Mac reported a healthy clip as offline until this stopped going through
+    `os.path.basename`.
+    """
+    assert project.file_name('Z:\\gone\\b.mp4') == 'b.mp4'
+    assert project.file_name('Z:/gone/b.mp4') == 'b.mp4'
+    assert project.file_name('b.mp4') == 'b.mp4'
+
+
 def test_a_clip_found_by_relative_path_is_not_offline(tmp_path):
     media = tmp_path / 'b.mp4'
     media.write_text('x', encoding='utf-8')
