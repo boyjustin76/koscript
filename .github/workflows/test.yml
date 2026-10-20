@@ -39,7 +39,8 @@ jobs:
         run: |
           set -o pipefail
           python -m pytest -q -rs --tb=short 2>&1 | tee pytest.log
-      # So a failure is readable on the run page without downloading the logs.
+      # So a failure is readable on the run page. The job summary needs a sign-in
+      # to view; an annotation does not, so the failure goes into both.
       - name: report
         if: always()
         shell: bash
@@ -47,3 +48,9 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           tail -60 pytest.log >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - name: annotate the failure
+        if: failure()
+        shell: bash
+        run: |
+          out=$(tail -40 pytest.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+          echo "::error title=pytest::${out}"
