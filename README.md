@@ -1,5 +1,9 @@
 # koscript
 
+[![test](https://github.com/boyjustin76/koscript/actions/workflows/test.yml/badge.svg)](https://github.com/boyjustin76/koscript/actions/workflows/test.yml)
+[![python](https://img.shields.io/badge/python-3.9%2B-blue)](pyproject.toml)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 **A toolkit for writing Korean video scripts.** Break lines where the grammar allows, not where
 the character count lands. Check what you wrote against your sources. Fill the DOCX form your
 producer sent you without breaking it.
