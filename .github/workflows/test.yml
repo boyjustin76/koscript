@@ -18,6 +18,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      # pdfform calls the poppler binaries. The tests skip themselves without
+      # them, so this is what makes them actually run.
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - if: runner.os == 'macOS'
+        run: brew install poppler
+      # No first-party Windows package, so this one is allowed to fail: the
+      # tests then skip the poppler half instead of failing the build.
+      - if: runner.os == 'Windows'
+        continue-on-error: true
+        run: choco install poppler --no-progress
       - run: pip install -e ".[dev]"
-      # 말뭉치가 필요한 시험은 스스로 건너뛴다 — CI 에서 받을 수 없는 자료다
-      - run: python -m pytest -q
+      # Tests that need the corpus skip themselves -- it cannot be downloaded in CI.
+      - run: python -m pytest -q -rs

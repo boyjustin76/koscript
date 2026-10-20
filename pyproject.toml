@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "koscript"
 version = "0.1.0"
-description = "한국어 영상 대본·자막과 그 둘레의 문서·편집 파일을 다루는 연장통"
+description = "A toolkit for writing Korean video scripts: clause-level line breaking, docx forms, Premiere XML, prompter PDFs"
 requires-python = ">=3.9"
 dependencies = []          # docx 묶음은 표준 라이브러리만 쓴다
 

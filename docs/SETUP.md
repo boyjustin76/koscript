@@ -1,10 +1,11 @@
 # Setup — what to install before you start
 
-`koscript` needs two things that **do not come with `pip install`**:
+`koscript` needs three things that **do not come with `pip install`**:
 
 1. **Kiwi** — a Korean morphological analyzer. One `pip` line. 2 minutes.
 2. **NIKL corpus (모두의 말뭉치)** — a Korean corpus you must **apply for**. Free, but a human
    approves it. A few days.
+3. **poppler** — command-line PDF tools, needed by `pdfform`. One install line. 2 minutes.
 
 This is normal for language tooling — spaCy makes you download a model, NLTK makes you download
 `punkt`, MeCab makes you build a dictionary. The difference here is that the corpus needs an
@@ -112,16 +113,33 @@ Kiwi is the default because it installs with one `pip` line and needs no system 
 If you already run **MeCab-ko** or **KoNLPy**, you can plug it in — see
 [`koscript/clause/README.md`](../koscript/clause/README.md#swapping-the-analyzer).
 
-## Optional — only for the `docx` tools
+## 3. poppler — needed by `pdfform`, and by `docx.render`
 
-`koscript.docx.render` turns a `.docx` into page images so you can look at it. It needs:
+```
+Windows:  winget install oschwartz10612.Poppler
+macOS:    brew install poppler
+Debian:   apt install poppler-utils
+```
 
-- **LibreOffice** — <https://www.libreoffice.org/download/>
-- **poppler** (for `pdftoppm`) — Windows: `winget install poppler` · macOS: `brew install poppler`
-  · Linux: `apt install poppler-utils`
+`koscript.pdfform` runs `pdftotext`, `pdftoppm`, `pdffonts` and `pdfinfo`. There is no
+Python package to install — they are command-line programs.
 
-`koscript` finds them automatically in the usual install locations. If it cannot, set
-`SOFFICE` (path to the executable) and `POPPLER_BIN` (path to poppler's `bin` folder).
+**On Windows the installer does not put them on `PATH`.** They land in a versioned
+folder under `%LOCALAPPDATA%\Microsoft\WinGet\Packages`, which `koscript` searches, so
+it usually just works. If it does not, set `KOSCRIPT_POPPLER` to the folder holding the
+binaries.
+
+> **Watch out: `pdftotext` on `PATH` may not be poppler.** Xpdf ships a program by the
+> same name, and Git for Windows installs one in `/mingw64/bin`. `koscript` identifies
+> candidates by their `-v` banner and prefers a real poppler, so you do not have to care
+> — but if something reads oddly, `poppler.banner('pdftotext')` tells you which one you
+> got.
+
+### Also for `docx.render` only
+
+`koscript.docx.render` turns a `.docx` into page images so you can look at it. On top of
+poppler it needs **LibreOffice** — <https://www.libreoffice.org/download/>. Set
+`SOFFICE` if it is somewhere unusual.
 
 Everything else in `koscript` is standard library only.
 
@@ -179,3 +197,32 @@ print(model.info())
 ```
 
 `word_forms: 0` 이면 표를 못 찾은 것입니다 — 어느 경로를 봤는지 같이 알려 줍니다.
+
+## 3. poppler — `pdfform` 이 씁니다, 2분
+
+```
+윈도우:  winget install oschwartz10612.Poppler
+맥:     brew install poppler
+우분투:  apt install poppler-utils
+```
+
+`koscript.pdfform` 은 `pdftotext`·`pdftoppm`·`pdffonts`·`pdfinfo` 를 부릅니다.
+파이썬 꾸러미가 아니라 **명령줄 프로그램**이라 `pip` 로는 안 깔립니다.
+
+**윈도우는 설치해도 `PATH` 에 안 잡힙니다.** `%LOCALAPPDATA%` 아래 winget 폴더(판번호가
+붙습니다)에 들어가는데, `koscript` 가 거기를 찾아보니 보통은 그냥 됩니다.
+못 찾으면 `KOSCRIPT_POPPLER` 환경변수로 그 `bin` 폴더를 알려 주세요.
+
+> **주의 — `PATH` 의 `pdftotext` 가 poppler 가 아닐 수 있습니다.** Xpdf 가 같은 이름의
+> 프로그램을 내놓고, Git for Windows 는 `/mingw64/bin` 에 그걸 깔아 둡니다. 바꿔 써도 되는
+> 물건이 아닙니다 — `-layout` 결과의 들여쓰기가 달라지고, **`-enc UTF-8` 없이는 한글을 아무
+> 말 없이 다 버립니다**(오류도 없이 문장부호만 남습니다).
+> `koscript` 가 `-v` 머리글로 가려서 진짜 poppler 를 고르니 신경 쓸 일은 없지만, 뭔가
+> 이상하면 `poppler.banner('pdftotext')` 로 어느 쪽이 잡혔는지 보세요.
+
+## 4. `docx.render` 만 더 필요한 것
+
+`.docx` 를 쪽 그림으로 바꿔 눈으로 보려면 poppler 말고 **LibreOffice** 가 더 있어야 합니다
+(<https://www.libreoffice.org/download/>). 엉뚱한 자리에 깔려 있으면 `SOFFICE` 로 알려 주세요.
+
+나머지는 전부 파이썬 표준 라이브러리만 씁니다.

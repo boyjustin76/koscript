@@ -40,8 +40,9 @@ reference.
 | [**`clause`**](koscript/clause) | Break Korean text at clause and phrase boundaries. Graded — punctuation first, sentence endings next, particles only as a last resort. Never breaks before an auxiliary verb, a bound noun, or after `-의`. |
 | [**`docx`**](koscript/docx) | Edit a `.docx` form without breaking it. Read a reviewer's **strikethrough and underline marks**. Diff two revisions paragraph by paragraph. Build OOXML that Word will actually open. |
 | [**`premiere`**](koscript/premiere) | Build an FCP7 XML sequence Premiere will actually import -- including the `pathurl` encoding that silently breaks it. Read a `.prproj` without opening Premiere. |
+| [**`pdfform`**](koscript/pdfform) | Read a **prompter script** out of a PDF as spoken sentences -- past the six ways `pdftotext` gets them wrong. Measure a PDF form you have to reproduce: page size, fonts, margins, highlighter colours. |
 
-More to come -- prompter PDF reading, copy-overlap checking.
+More to come -- copy-overlap checking.
 
 ## Install
 
@@ -50,6 +51,9 @@ git clone https://github.com/<you>/koscript && cd koscript && pip install -e .
 # then get the corpus — docs/SETUP.md . `clause` needs it; `docx` does not.
 pip install kiwipiepy           # optional, see "Does Kiwi help?" below
 ```
+
+`pdfform` needs **poppler** on the machine (`pdftotext`, `pdftoppm`) — no Python package.
+`clause`, `docx` and `premiere` need nothing but the standard library.
 
 ## Quick look
 
@@ -151,6 +155,10 @@ libass 이슈 #694 를 보면 한국어는 ICU·Budou 모두 **"띄어쓰기에�
   조사는 마지막 수단. 보조용언·의존명사 앞, `-의` 뒤에서는 끊지 않습니다
 - **`koscript.docx`** — 워드 양식 안 깨고 고치기, **취소선·밑줄 검토 표시 읽기**,
   두 판 문단 전수 대조, 워드가 여는 OOXML 짓기
+- **`koscript.premiere`** — 프리미어가 **가져오기를 거부하는 여섯 가지**를 피한 FCP7 XML 짓기,
+  프리미어 없이 `.prproj` 읽기
+- **`koscript.pdfform`** — 촬영용 프롬프터 `.pdf` 에서 **낭독 문장** 뽑기
+  (`pdftotext` 가 문장을 틀리는 여섯 가지), 맞춰야 할 양식 실측(쪽 크기·글꼴·여백·강조색)
 
 ## 얼마나 되나
 
